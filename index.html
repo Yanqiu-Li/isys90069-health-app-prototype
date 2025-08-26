@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hypertension Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4723DB',
+                        'primary-light': '#DCD4FD',
+                        secondary: '#FF4D59',
+                        'secondary-light': '#FEDADD',
+                        error: '#FF4D59',
+                        warning: '#FF8C00',
+                        surface: '#FAFBFF',
+                        'card-bg': 'rgba(255, 255, 255, 0.8)',
+                        'glass-bg': 'rgba(255, 255, 255, 0.6)',
+                        'normal-bp': '#34C759',
+                        'elevated-bp': '#FF9500',
+                        'stage1-htn': '#FF6B35',
+                        'crisis-bp': '#FF3B30',
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px rgba(71, 35, 219, 0.1)',
+                        'card': '0 4px 24px rgba(71, 35, 219, 0.08)',
+                        'soft': '0 2px 16px rgba(71, 35, 219, 0.06)',
+                        'floating': '0 12px 40px rgba(71, 35, 219, 0.12)',
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.5rem',
+                        '4xl': '2rem',
+                    },
+                    fontFamily: {
+                        'sf-pro': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'system-ui', 'sans-serif'],
+                    },
+                    maxWidth: {
+                        'ios': '390px',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --safe-area-inset-top: env(safe-area-inset-top, 44px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 34px);
+            --safe-area-inset-left: env(safe-area-inset-left, 0px);
+            --safe-area-inset-right: env(safe-area-inset-right, 0px);
+        }
+        
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        }
+        
+        body {
+            background: var(--ios-background);
+            margin: 0;
+            padding: 0;
+            color: var(--ios-text-primary);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000000;
+                color: #FFFFFF;
+            }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #DCD4FD 0%, #FEDADD 100%);
+        }
+        
+        :root {
+            --ios-background: #F2F2F7;
+            --ios-card-background: #FFFFFF;
+            --ios-text-primary: #1C1C1E;
+            --ios-text-secondary: #8E8E93;
+            --ios-separator: #C6C6C8;
+            --ios-blue: #007AFF;
+            --ios-red: #FF3B30;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ios-background: #000000;
+                --ios-card-background: #1C1C1E;
+                --ios-text-primary: #FFFFFF;
+                --ios-text-secondary: #8E8E93;
+                --ios-separator: #38383A;
+                --ios-blue: #0A84FF;
+                --ios-red: #FF453A;
+            }
+        }
+        
+        .ios-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ios-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            pointer-events: none;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .ios-card {
+                background: rgba(28, 28, 30, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            }
+            
+            .ios-card::before {
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            }
+            
+            header {
+                background: rgba(28, 28, 30, 0.8) !important;
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            nav {
+                background: rgba(28, 28, 30, 0.8) !important;
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            #contentArea {
+                background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%) !important;
+            }
+            
+            .text-gray-600 {
+                color: var(--ios-text-secondary) !important;
+            }
+            
+            .text-gray-800 {
+                color: var(--ios-text-primary) !important;
+            }
+        }
+        
+        .ios-card:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+            pointer-events: none;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(71, 35, 219, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #4723DB 0%, #6B46C1 100%);
+        }
+        
+        .secondary-gradient {
+            background: linear-gradient(135deg, #FF4D59 0%, #EC4899 100%);
+        }
+        
+        .soft-shadow {
+            box-shadow: 0 2px 16px rgba(71, 35, 219, 0.06);
+        }
+        
+        .floating-shadow {
+            box-shadow: 0 8px 32px rgba(71, 35, 219, 0.1);
+        }
+        
+        .micro-interaction {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .micro-interaction:hover {
+            transform: scale(1.02);
+        }
+        
+        .micro-interaction:active {
+            transform: scale(0.98);
+        }
+        
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .pulse-gentle {
+            animation: pulseGentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .border-3 {
+            border-width: 3px;
+        }
+        
+        /* Focus indicators for accessibility */
+        .focus-visible {
+            outline: 2px solid #4723DB;
+            outline-offset: 2px;
+        }
+        
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid #4723DB;
+            outline-offset: 2px;
+        }
+        
+        /* High contrast mode improvements */
+        @media (prefers-contrast: high) {
+            .ios-card {
+                border: 2px solid currentColor;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+            
+            .glass-card {
+                border: 2px solid currentColor;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+            
+            nav {
+                background: rgba(255, 255, 255, 0.98) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            
+            header {
+                background: rgba(255, 255, 255, 0.98) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            
+            .bg-pattern {
+                display: none;
+            }
+        }
+        
+        /* Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            .bg-pattern::before {
+                animation: none;
+            }
+            
+            .ios-card,
+            .glass-card {
+                transition: none;
+            }
+            
+            .ios-spring {
+                transition: none;
+            }
+        }
+        
+        /* Notification glass effect */
+        .notification-glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .notification-glass {
+                background: rgba(28, 28, 30, 0.85);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .bg-pattern {
+                background: 
+                    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.2) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(120, 199, 120, 0.15) 0%, transparent 50%);
+            }
+        }
+        
+        /* Enhanced card hover effects */
+        .ios-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .ios-card:hover {
+                background: rgba(28, 28, 30, 0.9);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            }
+        }
+        
+        /* Medication button system - extra compact */
+        .med-action-group {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+        }
+        
+        /* Primary action - Take Now */
+        .med-btn-primary {
+            background: #34C759;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            min-height: 28px;
+            flex: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(52, 199, 89, 0.15);
+        }
+        
+        .med-btn-primary:hover {
+            background: #30D158;
+            box-shadow: 0 2px 4px rgba(52, 199, 89, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .med-btn-primary:active {
+            background: #28CD47;
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 1px 1px rgba(52, 199, 89, 0.15);
+        }
+        
+        /* Secondary action - Later */
+        .med-btn-secondary {
+            background: rgba(255, 149, 0, 0.08);
+            color: #FF9500;
+            border: 1px solid rgba(255, 149, 0, 0.2);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            min-height: 28px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .med-btn-secondary:hover {
+            background: rgba(255, 149, 0, 0.12);
+            border-color: rgba(255, 149, 0, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .med-btn-secondary:active {
+            background: rgba(255, 149, 0, 0.16);
+            transform: translateY(0px) scale(0.98);
+        }
+        
+        /* Skip button - light red */
+        .med-btn-skip {
+            background: rgba(255, 59, 48, 0.08);
+            color: #FF3B30;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            min-height: 28px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .med-btn-skip:hover {
+            background: rgba(255, 59, 48, 0.12);
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+        
+        .med-btn-skip:active {
+            background: rgba(255, 59, 48, 0.16);
+            transform: scale(0.98);
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .med-btn-secondary {
+                background: rgba(255, 149, 0, 0.12);
+                border-color: rgba(255, 149, 0, 0.25);
+                color: #FFAB00;
+            }
+            
+            .med-btn-secondary:hover {
+                background: rgba(255, 149, 0, 0.18);
+                border-color: rgba(255, 149, 0, 0.35);
+            }
+            
+            .med-btn-skip {
+                background: rgba(255, 69, 58, 0.12);
+                border-color: rgba(255, 69, 58, 0.25);
+                color: #FF453A;
+            }
+            
+            .med-btn-skip:hover {
+                background: rgba(255, 69, 58, 0.18);
+                border-color: rgba(255, 69, 58, 0.35);
+            }
+        }
+        
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 380px) {
+            .med-action-group {
+                gap: 4px;
+                padding: 6px 12px;
+            }
+            
+            .med-btn-primary,
+            .med-btn-secondary,
+            .med-btn-skip {
+                padding: 5px 6px;
+                font-size: 11px;
+                min-height: 24px;
+                gap: 1px;
+            }
+        }
+        
+        /* Large screen optimizations */
+        @media (min-width: 768px) {
+            .med-action-group {
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            
+            .med-btn-primary,
+            .med-btn-secondary,
+            .med-btn-skip {
+                padding: 8px 12px;
+                font-size: 13px;
+                min-height: 32px;
+            }
+        }
+        
+        /* Background Elements */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 199, 120, 0.2) 0%, transparent 50%);
+        }
+        
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(1deg); }
+            66% { transform: translateY(5px) rotate(-1deg); }
+        }
+        
+        /* Enhanced Navigation Bar */
+        nav {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            pointer-events: none;
+        }
+        
+        @keyframes pulseGentle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .nav-blur {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(71, 35, 219, 0.1);
+        }
+        
+        .header-blur {
+            backdrop-filter: blur(20px);
+            background: linear-gradient(135deg, #4723DB 0%, #6B46C1 100%);
+        }
+        
+        .input-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(71, 35, 219, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-glass:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #4723DB;
+            box-shadow: 0 0 0 4px rgba(71, 35, 219, 0.1);
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #4723DB 0%, #6B46C1 100%);
+            box-shadow: 0 4px 16px rgba(71, 35, 219, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(71, 35, 219, 0.35);
+        }
+        
+        .button-secondary {
+            background: linear-gradient(135deg, #FF4D59 0%, #EC4899 100%);
+            box-shadow: 0 4px 16px rgba(255, 77, 89, 0.25);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #4723DB 0%, #6B46C1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        
+        .progress-circle {
+            filter: drop-shadow(0 4px 8px rgba(71, 35, 219, 0.15));
+        }
+        
+        .notification-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(71, 35, 219, 0.1);
+        }
+        
+        /* Standardized spacing system */
+        .space-xs { margin: 0.25rem; }
+        .space-sm { margin: 0.5rem; }
+        .space-md { margin: 1rem; }
+        .space-lg { margin: 1.5rem; }
+        .space-xl { margin: 2rem; }
+        .space-2xl { margin: 3rem; }
+        
+        /* Enhanced micro-interactions */
+        .interactive-element {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .interactive-element:hover {
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 8px 32px rgba(71, 35, 219, 0.15);
+        }
+        
+        .interactive-element:active {
+            transform: translateY(0) scale(0.99);
+        }
+    </style>
+</head>
+<body class="min-h-screen" style="background: linear-gradient(135deg, #FAFBFF 0%, #F0F4FF 100%);">
+    <!-- Mobile Container -->
+    <div class="mx-auto min-h-screen relative overflow-hidden" style="width: 390px; background: var(--ios-background); max-width: 390px;">
+        <!-- Status Bar Spacer -->
+        <div style="height: var(--safe-area-inset-top); background: var(--ios-background);"></div>
+        
+        <!-- Login Screen (Initially visible) -->
+        <div id="loginScreen" class="p-8 min-h-screen flex flex-col fade-in" style="background: var(--ios-background);">
+            <!-- Logo Section -->
+            <div class="text-center mt-20 mb-20">
+                <div class="w-28 h-28 primary-gradient rounded-4xl mx-auto flex items-center justify-center mb-6 shadow-floating micro-interaction">
+                    <i class="fas fa-heart text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gradient mb-3">Hypertension Manager</h1>
+                <p class="text-gray-500 font-medium">Your personal health companion</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="glass-card rounded-3xl p-8 mb-8 space-lg">
+                <h2 class="text-2xl font-semibold text-center mb-8 text-gradient">Sign In</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-3">Email</label>
+                        <div class="relative">
+                            <input type="email" id="email" value="demo@hypertension-app.com" 
+                                   class="w-full p-4 pl-12 input-glass rounded-2xl focus:outline-none">
+                            <i class="fas fa-envelope absolute left-4 top-4 text-primary/60"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-3">Password</label>
+                        <div class="relative">
+                            <input type="password" id="password" value="demo123"
+                                   class="w-full p-4 pl-12 pr-12 input-glass rounded-2xl focus:outline-none">
+                            <i class="fas fa-lock absolute left-4 top-4 text-primary/60"></i>
+                            <i class="fas fa-eye absolute right-4 top-4 text-primary/60 cursor-pointer micro-interaction"></i>
+                        </div>
+                    </div>
+
+                    <button onclick="login()" class="w-full button-primary text-white py-4 rounded-2xl font-semibold text-lg micro-interaction">
+                        Sign In
+                    </button>
+
+                    <div class="flex items-center my-6">
+                        <div class="flex-1 border-t border-primary/20"></div>
+                        <span class="px-6 text-gray-400 font-medium">OR</span>
+                        <div class="flex-1 border-t border-primary/20"></div>
+                    </div>
+
+                    <button class="w-full glass-card border border-primary/30 text-primary py-4 rounded-2xl font-semibold micro-interaction">
+                        <i class="fas fa-hospital mr-3"></i>Connect with EHR
+                    </button>
+
+                    <button onclick="login()" class="w-full text-primary/80 font-medium py-3 micro-interaction">
+                        Use Demo Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="glass-card rounded-3xl p-6">
+                <h3 class="font-semibold mb-6 text-gradient text-lg">Features:</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center p-3 glass-card rounded-2xl micro-interaction">
+                        <div class="w-10 h-10 primary-gradient rounded-2xl flex items-center justify-center mr-4">
+                            <i class="fas fa-heartbeat text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Blood Pressure Tracking</p>
+                            <p class="text-sm text-gray-500">Record and track your daily readings</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 glass-card rounded-2xl micro-interaction">
+                        <div class="w-10 h-10 secondary-gradient rounded-2xl flex items-center justify-center mr-4">
+                            <i class="fas fa-dumbbell text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Lifestyle Coaching</p>
+                            <p class="text-sm text-gray-500">Personalized health recommendations</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 glass-card rounded-2xl micro-interaction">
+                        <div class="w-10 h-10 primary-gradient rounded-2xl flex items-center justify-center mr-4">
+                            <i class="fas fa-pills text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Medication Management</p>
+                            <p class="text-sm text-gray-500">Never miss a dose with smart reminders</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 glass-card rounded-2xl micro-interaction">
+                        <div class="w-10 h-10 secondary-gradient rounded-2xl flex items-center justify-center mr-4">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">AI Health Assistant</p>
+                            <p class="text-sm text-gray-500">Get answers to your health questions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Pattern -->
+        <div class="bg-pattern"></div>
+        
+        <!-- Main App (Initially hidden) -->
+        <div id="mainApp" class="hidden h-screen flex flex-col fade-in">
+            <!-- iOS Navigation Header -->
+            <header class="px-4" style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.1); padding-top: 8px;">
+                <div class="flex items-center justify-between h-11">
+                    <button onclick="goBack()" id="backButton" class="hidden flex items-center justify-center w-8 h-8 rounded-full" style="color: #007AFF;">
+                        <i class="fas fa-chevron-left text-lg"></i>
+                    </button>
+                    <div class="flex-1 text-center">
+                        <h1 id="navTitle" class="text-lg font-semibold" style="color: #1C1C1E;"></h1>
+                    </div>
+                    <button class="flex items-center justify-center w-8 h-8 rounded-full" style="color: #007AFF;" onclick="showSettings()">
+                        <i class="fas fa-ellipsis-h text-lg"></i>
+                    </button>
+                </div>
+                
+                <!-- Large Title -->
+                <div id="largeTitleContainer" class="pb-2">
+                    <h1 id="pageTitle" class="text-3xl font-bold" style="color: #1C1C1E;">Blood Pressure</h1>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="contentArea" class="flex-1 overflow-y-auto" style="background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%); padding-bottom: var(--safe-area-inset-bottom);">
+
+                <!-- Blood Pressure Dashboard -->
+                <div id="bpContent" class="p-4 space-y-4">
+                    <!-- Welcome Card -->
+                    <div class="ios-card rounded-xl p-4">
+                        <h2 class="text-xl font-bold mb-2" style="color: #007AFF;">Welcome back, Demo Patient!</h2>
+                        <p class="text-gray-600 font-medium">Let's check your blood pressure readings.</p>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div onclick="showAddReading()" class="ios-card rounded-xl p-4 text-center cursor-pointer ios-spring">
+                            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3" style="background: var(--ios-blue);">
+                                <i class="fas fa-plus text-white text-lg"></i>
+                            </div>
+                            <p class="font-semibold mb-1 text-base" style="color: var(--ios-text-primary);">New Reading</p>
+                            <p class="text-sm" style="color: var(--ios-text-secondary);">Manual Entry</p>
+                        </div>
+                        <div onclick="showDeviceSync()" class="ios-card rounded-xl p-4 text-center cursor-pointer ios-spring">
+                            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3" style="background: var(--ios-red);">
+                                <i class="fab fa-bluetooth text-white text-lg"></i>
+                            </div>
+                            <p class="font-semibold mb-1 text-base" style="color: var(--ios-text-primary);">Device Sync</p>
+                            <p class="text-sm" style="color: var(--ios-text-secondary);">Connect BP Monitor</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart View Toggle -->
+                    <div class="ios-card rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg" style="color: #1C1C1E;">BP Trends</h3>
+                            <div class="flex bg-gray-100 rounded-lg p-1">
+                                <button onclick="showChart('weekly')" id="weeklyBtn" class="px-3 py-1 rounded-md text-sm font-medium" style="background: #007AFF; color: white;">Weekly</button>
+                                <button onclick="showChart('monthly')" id="monthlyBtn" class="px-3 py-1 rounded-md text-sm font-medium text-gray-600">Monthly</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="bpChart"></canvas>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-3 text-center font-medium">Pinch to zoom • Tap data points for details</p>
+                    </div>
+
+                    <!-- Recent Readings -->
+                    <div class="ios-card rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold">Recent Readings</h3>
+                            <button onclick="showAllReadings()" class="text-primary font-medium">View All</button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div onclick="showReadingDetails('reading1')" class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer card-hover">
+                                <i class="fas fa-check-circle text-normal-bp text-2xl mr-3"></i>
+                                <div class="flex-1">
+                                    <div class="flex justify-between">
+                                        <p class="font-semibold">128/82 mmHg</p>
+                                        <span class="text-xs text-gray-500">2:30 PM</span>
+                                    </div>
+                                    <p class="text-sm text-normal-bp">Normal • Sitting position</p>
+                                    <p class="text-xs text-gray-500">3 readings averaged</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            
+                            <div onclick="showReadingDetails('reading2')" class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer card-hover">
+                                <i class="fas fa-exclamation-circle text-elevated-bp text-2xl mr-3"></i>
+                                <div class="flex-1">
+                                    <div class="flex justify-between">
+                                        <p class="font-semibold">135/88 mmHg</p>
+                                        <span class="text-xs text-gray-500">8:15 AM</span>
+                                    </div>
+                                    <p class="text-sm text-elevated-bp">Elevated • Standing</p>
+                                    <p class="text-xs text-gray-500">2 readings averaged</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            
+                            <div onclick="showReadingDetails('reading3')" class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer card-hover">
+                                <i class="fas fa-check-circle text-normal-bp text-2xl mr-3"></i>
+                                <div class="flex-1">
+                                    <div class="flex justify-between">
+                                        <p class="font-semibold">122/79 mmHg</p>
+                                        <span class="text-xs text-gray-500">Yesterday</span>
+                                    </div>
+                                    <p class="text-sm text-normal-bp">Normal • Sitting</p>
+                                    <p class="text-xs text-gray-500">Single reading</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Statistics -->
+                    <div class="ios-card rounded-xl p-4">
+                        <h3 class="font-semibold mb-4">Weekly Average</h3>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-normal-bp">128</p>
+                                <p class="font-medium">Systolic</p>
+                                <p class="text-xs text-gray-600">mmHg</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-normal-bp">83</p>
+                                <p class="font-medium">Diastolic</p>
+                                <p class="text-xs text-gray-600">mmHg</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-primary">14</p>
+                                <p class="font-medium">Readings</p>
+                                <p class="text-xs text-gray-600">this week</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Reading Modal -->
+                <div id="addReadingModal" class="hidden p-4 space-y-4">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 class="text-xl font-semibold mb-6">Add Blood Pressure Reading</h2>
+                        
+                        <!-- Input Method Selection -->
+                        <div class="mb-6">
+                            <p class="font-medium mb-3">Input Method:</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="selectInputMethod('manual')" id="manualInput" class="p-3 border-2 border-primary bg-primary/10 text-primary rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-keyboard mb-1 block"></i>
+                                    Manual Entry
+                                </button>
+                                <button onclick="selectInputMethod('device')" id="deviceInput" class="p-3 border-2 border-gray-300 text-gray-600 rounded-lg font-medium transition-colors">
+                                    <i class="fab fa-bluetooth mb-1 block"></i>
+                                    Device Sync
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Manual Input Form -->
+                        <div id="manualForm" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Systolic (mmHg)</label>
+                                    <input type="number" id="systolic" placeholder="120" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Diastolic (mmHg)</label>
+                                    <input type="number" id="diastolic" placeholder="80" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Body Position</label>
+                                <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                    <option>Sitting</option>
+                                    <option>Standing</option>
+                                    <option>Lying down</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Number of Readings</label>
+                                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                        <option>1</option>
+                                        <option selected>3</option>
+                                        <option>5</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Rest Period (min)</label>
+                                    <input type="number" value="5" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-3 pt-4">
+                                <button onclick="saveReading()" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold">Save Reading</button>
+                                <button onclick="cancelAddReading()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold">Cancel</button>
+                            </div>
+                        </div>
+
+                        <!-- Device Sync Form -->
+                        <div id="deviceForm" class="hidden space-y-4">
+                            <div class="text-center py-8">
+                                <i class="fab fa-bluetooth text-primary text-4xl mb-4"></i>
+                                <p class="font-medium mb-2">Searching for devices...</p>
+                                <p class="text-sm text-gray-600 mb-4">Make sure your BP monitor is in pairing mode</p>
+                                <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            </div>
+                            <button onclick="cancelAddReading()" class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reading Details Modal -->
+                <div id="readingDetailsModal" class="hidden p-4 space-y-4">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-normal-bp/20 rounded-full mx-auto flex items-center justify-center mb-3">
+                                <i class="fas fa-check-circle text-normal-bp text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-1">128/82 mmHg</h2>
+                            <p class="text-normal-bp font-medium">Normal Blood Pressure</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="font-semibold mb-3">Reading Details</h3>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Date & Time:</span>
+                                        <span class="font-medium">Jan 15, 2024 at 2:30 PM</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Body Position:</span>
+                                        <span class="font-medium">Sitting</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Readings Taken:</span>
+                                        <span class="font-medium">3 (averaged)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Rest Period:</span>
+                                        <span class="font-medium">5 minutes</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Device:</span>
+                                        <span class="font-medium">Manual Entry</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="font-semibold mb-2">Individual Readings</h3>
+                                <div class="space-y-1 text-sm">
+                                    <p>Reading 1: 130/84 mmHg</p>
+                                    <p>Reading 2: 127/81 mmHg</p>
+                                    <p>Reading 3: 127/81 mmHg</p>
+                                </div>
+                            </div>
+
+                            <button onclick="goBack()" class="w-full bg-primary text-white py-3 rounded-lg font-semibold">Done</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lifestyle Content -->
+                <div id="lifestyleContent" class="hidden p-4 space-y-4">
+                    <!-- Progress Overview -->
+                    <div class="ios-card rounded-xl p-4">
+                        <h2 class="text-xl font-bold mb-6" style="color: var(--ios-text-primary);">Your Health Journey</h2>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div onclick="showCategoryDetail('exercise')" class="text-center cursor-pointer ios-spring">
+                                <div class="relative w-20 h-20 mx-auto mb-3">
+                                    <svg class="w-20 h-20 transform -rotate-90">
+                                        <circle cx="40" cy="40" r="32" stroke="#E5E5EA" stroke-width="4" fill="transparent"/>
+                                        <circle cx="40" cy="40" r="32" stroke="#34C759" stroke-width="4" fill="transparent" class="progress-meter transition-all duration-700" stroke-dasharray="201" stroke-dashoffset="60"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center w-10 h-10 mx-auto my-auto rounded-full" style="background: rgba(52, 199, 89, 0.15);">
+                                        <i class="fas fa-dumbbell text-lg" style="color: #34C759;"></i>
+                                    </div>
+                                </div>
+                                <p class="font-semibold" style="color: var(--ios-text-primary);">Exercise</p>
+                                <p class="text-sm font-bold" style="color: #34C759;">70%</p>
+                                <p class="text-xs" style="color: var(--ios-text-secondary);">105/150 min/week</p>
+                            </div>
+                            
+                            <div onclick="showCategoryDetail('diet')" class="text-center cursor-pointer ios-spring">
+                                <div class="relative w-20 h-20 mx-auto mb-3">
+                                    <svg class="w-20 h-20 transform -rotate-90">
+                                        <circle cx="40" cy="40" r="32" stroke="#E5E5EA" stroke-width="4" fill="transparent"/>
+                                        <circle cx="40" cy="40" r="32" stroke="#FF9500" stroke-width="4" fill="transparent" class="progress-meter transition-all duration-700" stroke-dasharray="201" stroke-dashoffset="32"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center w-10 h-10 mx-auto my-auto rounded-full" style="background: rgba(255, 149, 0, 0.15);">
+                                        <i class="fas fa-utensils text-lg" style="color: #FF9500;"></i>
+                                    </div>
+                                </div>
+                                <p class="font-semibold" style="color: var(--ios-text-primary);">Diet</p>
+                                <p class="text-sm font-bold" style="color: #FF9500;">84%</p>
+                                <p class="text-xs" style="color: var(--ios-text-secondary);">4.2/5g salt/day</p>
+                            </div>
+
+                            <div onclick="showCategoryDetail('sleep')" class="text-center cursor-pointer ios-spring">
+                                <div class="relative w-20 h-20 mx-auto mb-3">
+                                    <svg class="w-20 h-20 transform -rotate-90">
+                                        <circle cx="40" cy="40" r="32" stroke="#E5E5EA" stroke-width="4" fill="transparent"/>
+                                        <circle cx="40" cy="40" r="32" stroke="#AF52DE" stroke-width="4" fill="transparent" class="progress-meter transition-all duration-700" stroke-dasharray="201" stroke-dashoffset="20"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center w-10 h-10 mx-auto my-auto rounded-full" style="background: rgba(175, 82, 222, 0.15);">
+                                        <i class="fas fa-moon text-lg" style="color: #AF52DE;"></i>
+                                    </div>
+                                </div>
+                                <p class="font-semibold" style="color: var(--ios-text-primary);">Sleep</p>
+                                <p class="text-sm font-bold" style="color: #AF52DE;">90%</p>
+                                <p class="text-xs" style="color: var(--ios-text-secondary);">7.2/8 hrs/night</p>
+                            </div>
+
+                            <div onclick="showCategoryDetail('stress')" class="text-center cursor-pointer ios-spring">
+                                <div class="relative w-20 h-20 mx-auto mb-3">
+                                    <svg class="w-20 h-20 transform -rotate-90">
+                                        <circle cx="40" cy="40" r="32" stroke="#E5E5EA" stroke-width="4" fill="transparent"/>
+                                        <circle cx="40" cy="40" r="32" stroke="#007AFF" stroke-width="4" fill="transparent" class="progress-meter transition-all duration-700" stroke-dasharray="201" stroke-dashoffset="80"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center w-10 h-10 mx-auto my-auto rounded-full" style="background: rgba(0, 122, 255, 0.15);">
+                                        <i class="fas fa-brain text-lg" style="color: #007AFF;"></i>
+                                    </div>
+                                </div>
+                                <p class="font-semibold" style="color: var(--ios-text-primary);">Stress</p>
+                                <p class="text-sm font-bold" style="color: #007AFF;">60%</p>
+                                <p class="text-xs" style="color: var(--ios-text-secondary);">Meditation streak</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Divider -->
+                    <div class="h-px bg-gray-200 my-6" style="background-color: var(--ios-separator);"></div>
+                    
+                    <!-- Daily Recommendations -->
+                    <div class="ios-card rounded-xl p-6">
+                        <div class="flex items-center mb-6">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background: rgba(0, 122, 255, 0.15);">
+                                <i class="fas fa-bullseye text-sm" style="color: #007AFF;"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold" style="color: var(--ios-text-primary);">Today's Recommendations</h3>
+                                <p class="text-sm" style="color: var(--ios-text-secondary);">Complete these to improve your health</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                        
+                        <div class="ios-card rounded-xl p-4 ios-spring" id="walkActivity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background: rgba(52, 199, 89, 0.15);">
+                                        <i class="fas fa-walking" style="color: #34C759;"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold" style="color: var(--ios-text-primary);">Add 10 minutes walk today</p>
+                                        <p class="text-sm" style="color: var(--ios-text-secondary);">You're 45 min short of your weekly goal</p>
+                                    </div>
+                                </div>
+                                <button class="w-11 h-11 rounded-full border-3 flex items-center justify-center transition-all micro-interaction" style="border-color: #34C759; background: transparent;" id="walkCheck" onclick="completeActivity(this.closest('.ios-card'))" aria-label="Mark walking activity as complete">
+                                    <i class="fas fa-check text-white text-base opacity-0" id="walkCheckIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="ios-card rounded-xl p-4 ios-spring" id="waterActivity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background: rgba(0, 122, 255, 0.15);">
+                                        <i class="fas fa-glass-water" style="color: var(--ios-blue);"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold" style="color: var(--ios-text-primary);">Track your water intake</p>
+                                        <p class="text-sm" style="color: var(--ios-text-secondary);">Aim for 8 glasses today</p>
+                                    </div>
+                                </div>
+                                <button class="w-11 h-11 rounded-full border-3 flex items-center justify-center transition-all micro-interaction" style="border-color: var(--ios-blue); background: transparent;" id="waterCheck" onclick="completeActivity(this.closest('.ios-card'))" aria-label="Mark water intake as complete">
+                                    <i class="fas fa-check text-white text-base opacity-0" id="waterCheckIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="ios-card rounded-xl p-4 ios-spring" id="breathingActivity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background: rgba(175, 82, 222, 0.15);">
+                                        <i class="fas fa-spa" style="color: #AF52DE;"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold" style="color: var(--ios-text-primary);">Practice 5-min deep breathing</p>
+                                        <p class="text-sm" style="color: var(--ios-text-secondary);">Great for managing stress</p>
+                                    </div>
+                                </div>
+                                <button class="w-11 h-11 rounded-full border-3 flex items-center justify-center transition-all micro-interaction" style="border-color: #AF52DE; background: transparent;" id="breathingCheck" onclick="completeActivity(this.closest('.ios-card'))" aria-label="Mark breathing exercise as complete">
+                                    <i class="fas fa-check text-white text-base opacity-0" id="breathingCheckIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Divider -->
+                    <div class="h-px bg-gray-200 my-6" style="background-color: var(--ios-separator);"></div>
+                    
+                    <!-- Goal Setting -->
+                    <div class="ios-card rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold" style="color: var(--ios-text-primary);">Active Goals</h3>
+                            <button onclick="showGoalSetting()" class="ios-spring font-semibold" style="color: var(--ios-blue);">Set Goals</button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="mb-6">
+                                <div class="flex items-center justify-between mb-3">
+                                    <p class="font-semibold" style="color: var(--ios-text-primary);">Exercise 150 min/week</p>
+                                    <span class="text-sm font-semibold" style="color: #34C759;">105/150</span>
+                                </div>
+                                <div class="w-full rounded-full h-2" style="background: rgba(52, 199, 89, 0.2);">
+                                    <div class="h-2 rounded-full progress-meter transition-all duration-500" style="width: 70%; background: #34C759;"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <p class="font-semibold" style="color: var(--ios-text-primary);">Salt intake <5g/day</p>
+                                    <span class="text-sm font-semibold" style="color: var(--ios-blue);">4.2g avg</span>
+                                </div>
+                                <div class="w-full rounded-full h-2" style="background: rgba(0, 122, 255, 0.2);">
+                                    <div class="h-2 rounded-full progress-meter transition-all duration-500" style="width: 84%; background: var(--ios-blue);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievement Badge -->
+                    <div id="achievementBadge" class="hidden bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 text-white text-center badge-animation">
+                        <i class="fas fa-trophy text-2xl mb-2"></i>
+                        <p class="font-bold">Goal Achieved!</p>
+                        <p class="text-sm">You completed your daily walk goal</p>
+                    </div>
+                </div>
+
+                <!-- Category Detail View -->
+                <div id="categoryDetail" class="hidden p-4 space-y-4">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 bg-secondary/20 rounded-full mx-auto flex items-center justify-center mb-4">
+                                <i id="categoryIcon" class="fas fa-dumbbell text-secondary text-2xl"></i>
+                            </div>
+                            <h2 id="categoryTitle" class="text-xl font-semibold">Exercise Plan</h2>
+                            <p id="categoryProgress" class="text-secondary font-medium">105/150 minutes this week</p>
+                        </div>
+
+                        <!-- Progress Chart -->
+                        <div class="mb-6">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+
+                        <!-- Tips and Targets -->
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="font-semibold mb-2">This Week's Target</h3>
+                                <p class="text-sm">Complete 150 minutes of moderate aerobic activity spread throughout the week.</p>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="font-semibold mb-2">Tips for Success</h3>
+                                <ul class="text-sm space-y-1">
+                                    <li>• Break exercise into 10-15 minute sessions</li>
+                                    <li>• Try brisk walking, swimming, or cycling</li>
+                                    <li>• Include 2+ days of strength training</li>
+                                    <li>• Track your progress daily</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <button onclick="goBack()" class="w-full bg-primary text-white py-3 rounded-lg font-semibold mt-6">Back to Dashboard</button>
+                    </div>
+                </div>
+
+                <!-- Medication Content -->
+                <div id="medicationContent" class="hidden p-4 space-y-4">
+                    <!-- Adherence Overview -->
+                    <div class="ios-card rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold" style="color: var(--ios-text-primary);">Adherence This Week</h2>
+                            <span class="px-3 py-1 rounded-full font-bold text-sm" style="background: #34C759; color: white;">90%</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold" style="color: #34C759;">19</p>
+                                <p class="font-medium text-sm" style="color: var(--ios-text-secondary);">Taken</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold" style="color: #FF3B30;">2</p>
+                                <p class="font-medium text-sm" style="color: var(--ios-text-secondary);">Missed</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold" style="color: var(--ios-text-primary);">21</p>
+                                <p class="font-medium text-sm" style="color: var(--ios-text-secondary);">Scheduled</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t" style="border-color: var(--ios-separator);">
+                            <div class="flex justify-between text-sm">
+                                <span style="color: var(--ios-text-secondary);">Weekly Goal:</span>
+                                <span class="font-semibold" style="color: var(--ios-text-primary);">85%+ adherence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div onclick="showAddMedication()" class="bg-white rounded-xl p-4 shadow-sm text-center card-hover cursor-pointer">
+                            <i class="fas fa-plus-circle text-primary text-2xl mb-2"></i>
+                            <p class="font-medium">Add Medication</p>
+                            <p class="text-sm text-gray-600">Search or scan</p>
+                        </div>
+                        <div onclick="showBarcodeScanner()" class="bg-white rounded-xl p-4 shadow-sm text-center card-hover cursor-pointer">
+                            <i class="fas fa-qrcode text-primary text-2xl mb-2"></i>
+                            <p class="font-medium">Scan Barcode</p>
+                            <p class="text-sm text-gray-600">Quick add</p>
+                        </div>
+                    </div>
+
+                    <!-- Today's Schedule -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold">Today's Schedule</h3>
+                            <span class="text-sm text-gray-600">Jan 15, 2024</span>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div onclick="showMedicationDetails('lisinopril')" class="relative cursor-pointer card-hover">
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-check-circle text-secondary"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Lisinopril 10mg</p>
+                                        <p class="text-sm text-gray-600">Scheduled for 8:00 AM</p>
+                                    </div>
+                                    <span class="bg-secondary/20 text-secondary text-xs px-2 py-1 rounded-full font-semibold">TAKEN</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg overflow-hidden">
+                                <div class="flex items-center p-3">
+                                    <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-clock text-primary"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Amlodipine 5mg</p>
+                                        <p class="text-sm text-gray-600">Scheduled for 2:00 PM</p>
+                                        <p class="text-xs text-primary font-semibold">Due in 2h 30m</p>
+                                    </div>
+                                </div>
+                                <!-- Quick Actions for pending medication -->
+                                <div class="med-action-group">
+                                    <button onclick="takeMedication('amlodipine')" class="med-btn-primary" aria-label="Take medication now">
+                                        <i class="fas fa-check text-xs"></i>
+                                        <span>Take Now</span>
+                                    </button>
+                                    <button onclick="remindLater('amlodipine')" class="med-btn-secondary" aria-label="Remind me in 30 minutes">
+                                        <i class="fas fa-clock text-xs"></i>
+                                        <span>Later</span>
+                                    </button>
+                                    <button onclick="skipMedication('amlodipine')" class="med-btn-skip" aria-label="Skip this medication dose">
+                                        <i class="fas fa-times text-xs"></i>
+                                        <span>Skip</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold">Metoprolol 25mg</p>
+                                    <p class="text-sm text-gray-600">Scheduled for 8:00 PM</p>
+                                    <p class="text-xs text-primary font-semibold">Due in 8h 30m</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medication List -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold">Active Medications</h3>
+                            <button class="text-primary font-medium">View All</button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div onclick="showMedicationDetails('lisinopril')" class="cursor-pointer card-hover">
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-pills text-primary"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium">Lisinopril (ACE Inhibitor)</p>
+                                        <p class="text-sm text-gray-600">10mg once daily • 2 refills left</p>
+                                        <p class="text-xs text-gray-500">Last taken: This morning</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adherence Summary Chart -->
+                    <div class="ios-card rounded-xl p-4">
+                        <h3 class="font-semibold mb-4" style="color: var(--ios-text-primary);">Adherence Trends</h3>
+                        <div style="height: 200px; position: relative;">
+                            <canvas id="adherenceChart"></canvas>
+                        </div>
+                        <p class="text-xs mt-2 text-center" style="color: var(--ios-text-secondary);">Tap bars for detailed breakdown</p>
+                    </div>
+
+                    <!-- Side Effects Tracker -->
+                    <div class="bg-warning/10 rounded-xl p-4">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                            <h3 class="font-semibold">Side Effects Tracker</h3>
+                        </div>
+                        <p class="text-sm mb-3">Log any side effects you experience to help your healthcare provider.</p>
+                        <button onclick="showSideEffectForm()" class="bg-warning text-white px-4 py-2 rounded-lg font-medium">
+                            <i class="fas fa-plus mr-2"></i>Report Side Effect
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Medication Modal -->
+                <div id="addMedicationModal" class="hidden p-4 space-y-4">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 class="text-xl font-semibold mb-6">Add Medication</h2>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Search Medication</label>
+                                <div class="relative">
+                                    <input type="text" placeholder="Enter medication name..." class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <div class="text-center py-4 border-t border-b">
+                                <button onclick="showBarcodeScanner()" class="flex items-center justify-center w-full p-3 bg-gray-50 rounded-lg">
+                                    <i class="fas fa-qrcode text-primary text-xl mr-3"></i>
+                                    <span class="font-medium">Scan Barcode Instead</span>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Dosage</label>
+                                    <input type="text" placeholder="10mg" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Frequency</label>
+                                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                        <option>Once daily</option>
+                                        <option>Twice daily</option>
+                                        <option>Three times daily</option>
+                                        <option>As needed</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Reminder Times</label>
+                                <div class="space-y-2">
+                                    <input type="time" value="08:00" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-3 pt-4">
+                                <button onclick="saveMedication()" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold">Add Medication</button>
+                                <button onclick="cancelAddMedication()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medication Details Modal -->
+                <div id="medicationDetailsModal" class="hidden p-4 space-y-4">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-primary/20 rounded-full mx-auto flex items-center justify-center mb-3">
+                                <i class="fas fa-pills text-primary text-2xl"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold mb-1">Lisinopril</h2>
+                            <p class="text-gray-600">ACE Inhibitor</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="font-semibold mb-3">Prescription Details</h3>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Dosage:</span>
+                                        <span class="font-medium">10mg</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Frequency:</span>
+                                        <span class="font-medium">Once daily</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Time:</span>
+                                        <span class="font-medium">8:00 AM</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Refills:</span>
+                                        <span class="font-medium">2 remaining</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Prescriber:</span>
+                                        <span class="font-medium">Dr. Smith</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="showSideEffectForm()" class="bg-warning text-white py-3 rounded-lg font-semibold">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    Side Effects
+                                </button>
+                                <button class="bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Edit
+                                </button>
+                            </div>
+
+                            <button onclick="goBack()" class="w-full bg-primary text-white py-3 rounded-lg font-semibold">Done</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assistant Content -->
+                <div id="assistantContent" class="hidden flex flex-col h-full">
+                    <!-- Disclaimer -->
+                    <div class="bg-warning/20 p-3 border-l-4 border-warning">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-warning mr-2"></i>
+                            <p class="text-sm font-medium text-warning">For informational purposes only. Not medical advice.</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="p-4 border-b">
+                        <div class="flex gap-2 overflow-x-auto">
+                            <button onclick="sendQuickMessage('Tell me about blood pressure readings')" 
+                                    class="whitespace-nowrap bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                Blood Pressure Info
+                            </button>
+                            <button onclick="sendQuickMessage('What foods help lower blood pressure?')" 
+                                    class="whitespace-nowrap bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                Diet Tips
+                            </button>
+                            <button onclick="sendQuickMessage('What exercises are good for hypertension?')" 
+                                    class="whitespace-nowrap bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                Exercise Guide
+                            </button>
+                            <button onclick="sendQuickMessage('Tell me about my medications')" 
+                                    class="whitespace-nowrap bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                Medications
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="flex-1 p-4 space-y-4 overflow-y-auto">
+                        <!-- AI Message -->
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-2">
+                                <i class="fas fa-robot text-white text-sm"></i>
+                            </div>
+                            <div class="bg-gray-200 rounded-2xl rounded-bl-sm p-3 max-w-xs">
+                                <p class="text-sm">Hello! I'm your AI health assistant. I can help you understand your blood pressure readings, provide information about hypertension management, and answer your health-related questions. How can I assist you today?</p>
+                                <div class="flex items-center mt-2 space-x-2">
+                                    <button onclick="saveToCarePlan('Welcome message')" class="text-xs text-primary hover:underline">
+                                        <i class="fas fa-bookmark mr-1"></i>Save to CarePlan
+                                    </button>
+                                    <span class="text-xs text-gray-500">2:30 PM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-4 border-t bg-white">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="messageInput" placeholder="Ask about your health..." 
+                                   class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <button onclick="sendMessage()" class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                <i class="fas fa-paper-plane text-white text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Floating Action Button -->
+            <div id="fab" class="fixed bottom-20 right-4">
+                <button onclick="showQuickAdd()" class="w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center text-white hover:bg-primary/90 transition-colors">
+                    <i class="fas fa-plus text-xl"></i>
+                </button>
+            </div>
+
+            <!-- iOS Tab Bar -->
+            <nav class="bg-white border-t border-gray-200" style="padding: 8px 0; padding-bottom: calc(8px + var(--safe-area-inset-bottom));">
+                <div class="flex justify-around items-center px-4">
+                    <button onclick="showContent('bp')" id="navBP" class="nav-item flex flex-col items-center py-1 min-w-0" style="color: #007AFF;" aria-label="Blood Pressure Dashboard">
+                        <i class="fas fa-heart text-2xl mb-1" aria-hidden="true"></i>
+                        <span class="text-xs font-medium">Blood Pressure</span>
+                    </button>
+                    <button onclick="showContent('lifestyle')" id="navLifestyle" class="nav-item flex flex-col items-center py-1 min-w-0" style="color: #8E8E93;" aria-label="Lifestyle Coaching">
+                        <i class="fas fa-running text-2xl mb-1" aria-hidden="true"></i>
+                        <span class="text-xs font-medium">Lifestyle</span>
+                    </button>
+                    <button onclick="showContent('medication')" id="navMedication" class="nav-item flex flex-col items-center py-1 min-w-0" style="color: #8E8E93;" aria-label="Medication Management">
+                        <i class="fas fa-pills text-2xl mb-1" aria-hidden="true"></i>
+                        <span class="text-xs font-medium">Medications</span>
+                    </button>
+                    <button onclick="showContent('assistant')" id="navAssistant" class="nav-item flex flex-col items-center py-1 min-w-0" style="color: #8E8E93;" aria-label="AI Health Assistant">
+                        <i class="fas fa-message text-2xl mb-1" aria-hidden="true"></i>
+                        <span class="text-xs font-medium">Assistant</span>
+                    </button>
+                </div>
+            </nav>
+            
+            <style>
+                @media (prefers-color-scheme: dark) {
+                    nav {
+                        background: #1C1C1E !important;
+                        border-color: #38383A !important;
+                    }
+                    .nav-item[style*="#8E8E93"] {
+                        color: #8E8E93 !important;
+                    }
+                    .nav-item[style*="#007AFF"] {
+                        color: #007AFF !important;
+                    }
+                }
+            </style>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 notification-glass text-primary px-6 py-4 rounded-2xl shadow-floating z-50 slide-up">
+        <div class="flex items-center space-x-3">
+            <div class="w-6 h-6 primary-gradient rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-white text-xs"></i>
+            </div>
+            <span id="toastMessage" class="font-medium">Notification message</span>
+        </div>
+    </div>
+
+    <script>
+        let currentView = 'bpContent';
+        let viewStack = [];
+        let bpChart, categoryChart, adherenceChart;
+        
+        // Debug function to validate navigation state (only for development)
+        function debugNavigation() {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('Navigation Debug:', {
+                    currentView,
+                    viewStack: [...viewStack],
+                    activeTab: document.querySelector('.nav-item.text-primary')?.id || 'none',
+                    visibleContent: Array.from(document.querySelectorAll('[id$="Content"]:not(.hidden)')).map(el => el.id)
+                });
+            }
+        }
+
+        function login() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            initializeCharts();
+        }
+
+        function showContent(section) {
+            // Hide all content
+            document.querySelectorAll('[id$="Content"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id$="Modal"]').forEach(el => el.classList.add('hidden'));
+            
+            // Show selected content
+            document.getElementById(section + 'Content').classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.style.color = '#8E8E93';
+            });
+            
+            // Update header title and active nav
+            let title = '';
+            switch(section) {
+                case 'bp':
+                    title = 'Blood Pressure';
+                    document.getElementById('navBP').style.color = '#007AFF';
+                    break;
+                case 'lifestyle':
+                    title = 'Lifestyle';
+                    document.getElementById('navLifestyle').style.color = '#007AFF';
+                    break;
+                case 'medication':
+                    title = 'Medications';
+                    document.getElementById('navMedication').style.color = '#007AFF';
+                    break;
+                case 'assistant':
+                    title = 'Health Assistant';
+                    document.getElementById('navAssistant').style.color = '#007AFF';
+                    break;
+            }
+            document.getElementById('pageTitle').textContent = title;
+            
+            // Show/hide large title based on content
+            const largeTitleContainer = document.getElementById('largeTitleContainer');
+            if (section === 'assistant') {
+                largeTitleContainer.style.display = 'none';
+            } else {
+                largeTitleContainer.style.display = 'block';
+            }
+            
+            // Reset view stack
+            viewStack = [];
+            currentView = section + 'Content';
+            document.getElementById('backButton').classList.add('hidden');
+        }
+
+        function goBack() {
+            if (viewStack.length > 0) {
+                const previousView = viewStack.pop();
+                showView(previousView);
+                if (viewStack.length === 0) {
+                    document.getElementById('backButton').classList.add('hidden');
+                }
+            } else {
+                // Fallback: if no view stack, go back to current tab's main content
+                const activeTab = document.querySelector('.nav-item.text-primary') || 
+                                 document.querySelector('.nav-item[style*="#007AFF"]');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('nav', '').toLowerCase();
+                    const contentId = tabId === 'bp' ? 'bpContent' : tabId + 'Content';
+                    showView(contentId);
+                } else {
+                    console.error('Navigation: No active tab found, using fallback');
+                    showView('bpContent');
+                }
+                document.getElementById('backButton').classList.add('hidden');
+            }
+        }
+
+        function showView(viewId) {
+            // Hide all content sections
+            document.querySelectorAll('[id$="Content"], [id$="Modal"], [id$="Detail"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show the target view if it exists
+            const targetElement = document.getElementById(viewId);
+            if (targetElement) {
+                targetElement.classList.remove('hidden');
+                currentView = viewId;
+            } else {
+                console.error('Navigation: Element not found:', viewId);
+                // Fallback to the current tab's content
+                const activeTab = document.querySelector('.nav-item.text-primary') || 
+                                 document.querySelector('.nav-item[style*="#007AFF"]');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('nav', '').toLowerCase();
+                    const fallbackContent = tabId === 'bp' ? 'bpContent' : tabId + 'Content';
+                    const fallbackElement = document.getElementById(fallbackContent);
+                    if (fallbackElement) {
+                        fallbackElement.classList.remove('hidden');
+                        currentView = fallbackContent;
+                    } else {
+                        console.error('Navigation: Fallback element not found:', fallbackContent);
+                        // Final fallback to bpContent
+                        const bpElement = document.getElementById('bpContent');
+                        if (bpElement) {
+                            bpElement.classList.remove('hidden');
+                            currentView = 'bpContent';
+                        }
+                    }
+                } else {
+                    console.error('Navigation: No active tab found, using bpContent as final fallback');
+                    const bpElement = document.getElementById('bpContent');
+                    if (bpElement) {
+                        bpElement.classList.remove('hidden');
+                        currentView = 'bpContent';
+                    }
+                }
+            }
+        }
+
+        function pushView(newViewId) {
+            // Only push if we're not already in a modal/detail view
+            if (currentView && !currentView.includes('Modal') && !currentView.includes('Detail')) {
+                viewStack.push(currentView);
+            }
+            
+            showView(newViewId);
+            document.getElementById('backButton').classList.remove('hidden');
+        }
+
+        // Blood Pressure Functions
+        function showAddReading() {
+            pushView('addReadingModal');
+            document.getElementById('pageTitle').textContent = 'Add Reading';
+        }
+
+        function selectInputMethod(method) {
+            document.getElementById('manualInput').classList.remove('bg-primary/10', 'text-primary', 'border-primary');
+            document.getElementById('deviceInput').classList.remove('bg-primary/10', 'text-primary', 'border-primary');
+            document.getElementById('manualForm').classList.add('hidden');
+            document.getElementById('deviceForm').classList.add('hidden');
+
+            if (method === 'manual') {
+                document.getElementById('manualInput').classList.add('bg-primary/10', 'text-primary', 'border-primary');
+                document.getElementById('manualForm').classList.remove('hidden');
+            } else {
+                document.getElementById('deviceInput').classList.add('bg-primary/10', 'text-primary', 'border-primary');
+                document.getElementById('deviceForm').classList.remove('hidden');
+            }
+        }
+
+        function saveReading() {
+            const systolic = document.getElementById('systolic').value;
+            const diastolic = document.getElementById('diastolic').value;
+            
+            if (systolic && diastolic) {
+                showNotification('Blood pressure reading saved successfully!');
+                goBack();
+            }
+        }
+
+        function cancelAddReading() {
+            goBack();
+        }
+
+        function showReadingDetails(readingId) {
+            pushView('readingDetailsModal');
+            document.getElementById('pageTitle').textContent = 'Reading Details';
+        }
+
+        function showDeviceSync() {
+            showNotification('Searching for Bluetooth devices...');
+        }
+
+        function showChart(period) {
+            const weeklyBtn = document.getElementById('weeklyBtn');
+            const monthlyBtn = document.getElementById('monthlyBtn');
+            
+            // Reset both buttons
+            weeklyBtn.style.background = 'transparent';
+            weeklyBtn.style.color = '#8E8E93';
+            monthlyBtn.style.background = 'transparent';
+            monthlyBtn.style.color = '#8E8E93';
+
+            if (period === 'weekly') {
+                weeklyBtn.style.background = '#007AFF';
+                weeklyBtn.style.color = 'white';
+            } else {
+                monthlyBtn.style.background = '#007AFF';
+                monthlyBtn.style.color = 'white';
+            }
+            
+            updateBPChart(period);
+        }
+
+        // Lifestyle Functions
+        function showCategoryDetail(category) {
+            pushView('categoryDetail');
+            
+            const icons = {
+                exercise: 'fas fa-dumbbell',
+                diet: 'fas fa-utensils',
+                sleep: 'fas fa-moon',
+                stress: 'fas fa-brain'
+            };
+            
+            const titles = {
+                exercise: 'Exercise Plan',
+                diet: 'Diet Management',
+                sleep: 'Sleep Tracking',
+                stress: 'Stress Management'
+            };
+            
+            document.getElementById('categoryIcon').className = icons[category] + ' text-secondary text-2xl';
+            document.getElementById('categoryTitle').textContent = titles[category];
+            document.getElementById('pageTitle').textContent = titles[category];
+            
+            // Update progress based on category
+            switch(category) {
+                case 'exercise':
+                    document.getElementById('categoryProgress').textContent = '105/150 minutes this week';
+                    break;
+                case 'diet':
+                    document.getElementById('categoryProgress').textContent = '4.2/5g salt per day average';
+                    break;
+                case 'sleep':
+                    document.getElementById('categoryProgress').textContent = '7.2/8 hours average';
+                    break;
+                case 'stress':
+                    document.getElementById('categoryProgress').textContent = '5 day meditation streak';
+                    break;
+            }
+            
+            initializeCategoryChart();
+        }
+
+        function completeActivity(activityCard) {
+            const activityId = activityCard.id;
+            const checkCircle = activityCard.querySelector('[id$="Check"]');
+            const checkIcon = activityCard.querySelector('[id$="CheckIcon"]');
+            
+            if (activityCard.dataset.completed === 'true') {
+                // Uncomplete the activity
+                activityCard.dataset.completed = 'false';
+                checkCircle.style.background = 'transparent';
+                checkIcon.style.opacity = '0';
+                activityCard.style.opacity = '1';
+            } else {
+                // Complete the activity
+                activityCard.dataset.completed = 'true';
+                
+                // Get the border color for the background
+                const borderColor = checkCircle.style.borderColor;
+                checkCircle.style.background = borderColor;
+                checkIcon.style.opacity = '1';
+                activityCard.style.opacity = '0.7';
+                
+                // Show achievement badge occasionally
+                if (Math.random() > 0.7) {
+                    showAchievementBadge();
+                }
+                
+                showNotification('Great job! Activity completed.');
+                
+                // Add haptic feedback simulation
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+        }
+
+        function showAchievementBadge() {
+            const badge = document.getElementById('achievementBadge');
+            badge.classList.remove('hidden');
+            setTimeout(() => {
+                badge.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Medication Functions
+        function showAddMedication() {
+            pushView('addMedicationModal');
+            document.getElementById('pageTitle').textContent = 'Add Medication';
+        }
+
+        function showBarcodeScanner() {
+            showNotification('Camera access required for barcode scanning');
+        }
+
+        function takeMedication(medicationId) {
+            // Add success feedback
+            showNotification('✅ Medication marked as taken');
+            // Update UI to show medication as taken
+            // Could add logic here to update the adherence chart data
+        }
+
+        function skipMedication(medicationId) {
+            // Add neutral feedback
+            showNotification('⚪ Medication skipped');
+            // Could add logic here to track skipped medications
+        }
+
+        function remindLater(medicationId) {
+            // Add informative feedback
+            showNotification('🕐 Reminder set for 30 minutes');
+            // Could add logic here to schedule notification
+        }
+
+        function showMedicationDetails(medicationId) {
+            pushView('medicationDetailsModal');
+            document.getElementById('pageTitle').textContent = 'Medication Details';
+        }
+
+        function showSideEffectForm() {
+            showNotification('Side effect form opened');
+        }
+
+        function saveMedication() {
+            showNotification('Medication added successfully!');
+            goBack();
+        }
+
+        function cancelAddMedication() {
+            goBack();
+        }
+
+        // Assistant Functions
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addUserMessage(message);
+            input.value = '';
+
+            setTimeout(() => {
+                const response = generateResponse(message);
+                addAIMessage(response);
+            }, 1000);
+        }
+
+        function sendQuickMessage(message) {
+            addUserMessage(message);
+            setTimeout(() => {
+                const response = generateResponse(message);
+                addAIMessage(response);
+            }, 1000);
+        }
+
+        function addUserMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-end justify-end';
+            messageDiv.innerHTML = `
+                <div class="bg-primary text-white rounded-2xl rounded-br-sm p-3 max-w-xs mr-2">
+                    <p class="text-sm">${message}</p>
+                </div>
+                <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addAIMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.className = 'flex items-start';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-2">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-gray-200 rounded-2xl rounded-bl-sm p-3 max-w-xs">
+                    <p class="text-sm">${message}</p>
+                    <div class="flex items-center mt-2 space-x-2">
+                        <button onclick="saveToCarePlan('${message.substring(0, 30)}...')" class="text-xs text-primary hover:underline">
+                            <i class="fas fa-bookmark mr-1"></i>Save to CarePlan
+                        </button>
+                        <span class="text-xs text-gray-500">${timestamp}</span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function generateResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            if (message.includes('135/88') || message.includes('elevated')) {
+                return 'Your BP reading of 135/88 mmHg is in the elevated range. This means your systolic pressure is between 120-129 and diastolic is less than 80, OR your systolic is 130-139 and diastolic is 80-89.<br><br>Consider lifestyle modifications like reducing sodium intake and increasing physical activity.<br><br><strong>Source:</strong> AHA/ACC Guidelines<br><br>⚠️ <strong>Recommendation:</strong> Please discuss this pattern with your healthcare provider if readings consistently remain elevated.';
+            } else if (message.includes('blood pressure') || message.includes('bp')) {
+                return 'Normal blood pressure is below 120/80 mmHg. Your recent readings show:<br><br>• 128/82 mmHg (Normal-High)<br>• 135/88 mmHg (Elevated)<br>• 122/79 mmHg (Normal)<br><br>Target for most adults: <130/80 mmHg<br><br><strong>Source:</strong> American Heart Association Guidelines (2017)<br><br>⚠️ For medical advice, please consult your healthcare provider.';
+            } else if (message.includes('medication') || message.includes('lisinopril')) {
+                return 'Your current medications include:<br><br>• <strong>Lisinopril 10mg</strong> (ACE Inhibitor) - Once daily<br>• <strong>Amlodipine 5mg</strong> (Calcium Channel Blocker) - Once daily<br><br>Your adherence rate is 90% this week - excellent! ACE inhibitors help relax blood vessels and reduce BP.<br><br>⚠️ Never stop medications without consulting your doctor. If you experience side effects, please report them.';
+            } else if (message.includes('emergency') || message.includes('180') || message.includes('urgent')) {
+                return '🚨 <strong>URGENT:</strong> Blood pressure ≥180/120 mmHg requires immediate medical attention, especially with symptoms like:<br><br>• Severe headache<br>• Chest pain<br>• Difficulty breathing<br>• Vision changes<br><br>📞 <strong>Call 911 immediately</strong> or go to the nearest emergency room.<br><br>⚠️ <strong>See your clinician immediately</strong> - This is not a substitute for emergency medical care.';
+            } else if (message.includes('food') || message.includes('diet')) {
+                return 'Heart-healthy foods for BP management:<br><br>• <strong>Reduce:</strong> Processed foods, excess salt (target <2,300mg/day)<br>• <strong>Include:</strong> Fruits, vegetables, whole grains, lean proteins<br>• <strong>DASH Diet:</strong> Proven to lower BP by 8-14 mmHg<br><br>Examples: Bananas (potassium), leafy greens, oats, salmon<br><br><strong>Source:</strong> American Heart Association<br><br>💡 Small changes make a big difference!';
+            } else if (message.includes('exercise') || message.includes('activity')) {
+                return 'Exercise recommendations for hypertension:<br><br>• <strong>Target:</strong> 150+ minutes moderate activity weekly<br>• <strong>Best options:</strong> Brisk walking, swimming, cycling<br>• <strong>Strength training:</strong> 2+ days per week<br>• <strong>Start slowly:</strong> Even 10 minutes helps<br><br>Regular exercise can lower BP by 4-9 mmHg!<br><br><strong>Source:</strong> Physical Activity Guidelines<br><br>⚠️ Check with your doctor before starting new programs.';
+            } else {
+                return `I can help explain your health data and provide evidence-based information about:<br><br>• Blood pressure readings interpretation<br>• Medication information and adherence<br>• Diet and lifestyle recommendations<br>• Exercise guidelines<br><br>What specific aspect would you like to know more about?<br><br>⚠️ I provide educational information only. Always consult your healthcare provider for medical decisions.`;
+            }
+        }
+
+        function saveToCarePlan(content) {
+            showNotification('Response saved to your CarePlan');
+        }
+
+        // Chart Initialization
+        function initializeCharts() {
+            initializeBPChart();
+            initializeAdherenceChart();
+        }
+
+        function initializeBPChart() {
+            const ctx = document.getElementById('bpChart').getContext('2d');
+            bpChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Systolic',
+                        data: [128, 135, 122, 130, 125, 132, 128],
+                        borderColor: '#E53E3E',
+                        backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Diastolic',
+                        data: [82, 88, 79, 85, 80, 84, 82],
+                        borderColor: '#2E7D96',
+                        backgroundColor: 'rgba(46, 125, 150, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 60,
+                            max: 150
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeAdherenceChart() {
+            const ctx = document.getElementById('adherenceChart').getContext('2d');
+            
+            // Realistic medication adherence data (3 medications per day)
+            const dailyScheduled = 3; // 3 medications scheduled per day
+            const adherenceData = [
+                { taken: 3, missed: 0 }, // Monday - 100%
+                { taken: 3, missed: 0 }, // Tuesday - 100%
+                { taken: 2, missed: 1 }, // Wednesday - 67% (missed 1)
+                { taken: 3, missed: 0 }, // Thursday - 100%
+                { taken: 3, missed: 0 }, // Friday - 100%
+                { taken: 2, missed: 1 }, // Saturday - 67% (missed 1)
+                { taken: 3, missed: 0 }  // Sunday - 100%
+            ];
+            
+            adherenceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Taken',
+                        data: adherenceData.map(d => d.taken),
+                        backgroundColor: '#34C759',
+                        borderColor: '#30D158',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }, {
+                        label: 'Missed',
+                        data: adherenceData.map(d => d.missed),
+                        backgroundColor: '#FF3B30',
+                        borderColor: '#FF453A',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    weight: 500
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const taken = adherenceData[dataIndex].taken;
+                                    const missed = adherenceData[dataIndex].missed;
+                                    const total = taken + missed;
+                                    const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
+                                    
+                                    if (context.dataset.label === 'Taken') {
+                                        return `Taken: ${taken}/${total} (${percentage}%)`;
+                                    } else {
+                                        return `Missed: ${missed}/${total} (${100-percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            max: dailyScheduled,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : '';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Medications',
+                                font: {
+                                    size: 12,
+                                    weight: 500
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        bar: {
+                            categoryPercentage: 0.8,
+                            barPercentage: 0.9
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeCategoryChart() {
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Minutes Exercised',
+                        data: [20, 30, 0, 25, 15, 10, 5],
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBPChart(period) {
+            if (period === 'monthly') {
+                bpChart.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                bpChart.data.datasets[0].data = [125, 128, 130, 127];
+                bpChart.data.datasets[1].data = [80, 82, 85, 81];
+            } else {
+                bpChart.data.labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                bpChart.data.datasets[0].data = [128, 135, 122, 130, 125, 132, 128];
+                bpChart.data.datasets[1].data = [82, 88, 79, 85, 80, 84, 82];
+            }
+            bpChart.update();
+        }
+
+        // Utility Functions
+        function showNotification(message) {
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('notificationToast').classList.remove('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('notificationToast').classList.add('hidden');
+            }, 3000);
+        }
+
+        function showQuickAdd() {
+            // Show context-sensitive quick add based on current tab
+            const currentTab = document.querySelector('.nav-item.text-primary');
+            if (currentTab.id === 'navBP') {
+                showAddReading();
+            } else if (currentTab.id === 'navMedication') {
+                showAddMedication();
+            } else {
+                showNotification('Quick add available for this section');
+            }
+        }
+
+        // Handle enter key in message input
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Add touch/click event handling for charts
+        function addChartInteractions() {
+            // Add pinch-to-zoom and click handlers for charts
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            addChartInteractions();
+        });
+    </script>
+</body>
+</html>
