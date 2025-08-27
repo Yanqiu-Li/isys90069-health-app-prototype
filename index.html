@@ -653,6 +653,34 @@
         .interactive-element:active {
             transform: translateY(0) scale(0.99);
         }
+
+        /* Hide scrollbars for all browsers */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        /* Ensure scrollability is maintained while hiding scrollbars */
+        .overflow-y-auto,
+        .overflow-x-auto,
+        .overflow-auto,
+        #contentArea,
+        #chatMessages {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar,
+        .overflow-x-auto::-webkit-scrollbar,
+        .overflow-auto::-webkit-scrollbar,
+        #contentArea::-webkit-scrollbar,
+        #chatMessages::-webkit-scrollbar {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="min-h-screen" style="background: linear-gradient(135deg, #FAFBFF 0%, #F0F4FF 100%);">
